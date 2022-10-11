@@ -4,15 +4,43 @@ import android.graphics.PointF;
 
 import com.facebook.react.bridge.Arguments;
 import com.facebook.react.bridge.ReadableMap;
+import com.facebook.react.bridge.ReadableArray;
 import com.facebook.react.bridge.WritableMap;
+import com.facebook.react.bridge.WritableArray;
+
+import com.facebook.react.bridge.WritableNativeArray;
+import com.facebook.react.bridge.WritableNativeMap;
 import com.google.mlkit.vision.face.Face;
 import com.google.mlkit.vision.face.FaceLandmark;
+import com.google.mlkit.vision.face.FaceContour;
+import java.util.*;
 
 public class FaceDetectorUtils {
   private static final String[] landmarkNames = {
           "bottomMouthPosition", "leftCheekPosition", "leftEarPosition",
           "leftEyePosition", "leftMouthPosition", "noseBasePosition", "rightCheekPosition",
           "rightEarPosition", "rightEyePosition", "rightMouthPosition"
+  };
+
+  private static final String[] contourNames = {
+           "face", "leftEye", "leftEyebrowBottom", "leftEyebrowTop", "lowerLipBottom", "lowerLipTop", "noseBottom", "noseBridge", "rightEye", "rightEyebrowBottom", "rightEyebrowTop", "upperLipBottom", "upperLipTop"
+  };
+
+  private static final int[] contourTypes = {
+    // FaceContour.ALL_POINTS,
+    FaceContour.FACE,
+    FaceContour.LEFT_EYE,
+    FaceContour.LEFT_EYEBROW_BOTTOM,
+    FaceContour.LEFT_EYEBROW_TOP,
+    FaceContour.LOWER_LIP_BOTTOM,
+    FaceContour.LOWER_LIP_TOP,
+    FaceContour.NOSE_BOTTOM,
+    FaceContour.NOSE_BRIDGE,
+    FaceContour.RIGHT_EYE,
+    FaceContour.RIGHT_EYEBROW_BOTTOM,
+    FaceContour.RIGHT_EYEBROW_TOP,
+    FaceContour.UPPER_LIP_BOTTOM,
+    FaceContour.UPPER_LIP_TOP,
   };
 
   public static WritableMap serializeFace(Face face) {
@@ -53,7 +81,8 @@ public class FaceDetectorUtils {
             FaceLandmark.RIGHT_CHEEK,
             FaceLandmark.RIGHT_EAR,
             FaceLandmark.RIGHT_EYE,
-            FaceLandmark.MOUTH_RIGHT};
+            FaceLandmark.MOUTH_RIGHT
+    };
 
     for (int i = 0; i < landmarks.length; ++i) {
       FaceLandmark landmark = face.getLandmark(landmarks[i]);
@@ -61,6 +90,80 @@ public class FaceDetectorUtils {
         encodedFace.putMap(landmarkNames[i], mapFromPoint(landmark.getPosition(), scaleX, scaleY, width, height, paddingLeft, paddingTop));
       }
     }
+
+    // if (!face.getContour(FaceContour.ALL_POINTS).getPoints().isEmpty()) {
+      WritableMap contours = Arguments.createMap();
+      // WritableMap testContours = Arguments.createMap();
+      // List<FaceContour> allFaceContour  = face.getAllContours();
+      
+      // for (int i = 0; i < contourTypes.length; ++i) {
+      //   FaceContour contourPoints = allFaceContour.get(contourTypes[i]).getPoints();
+      //   System.out.println(contourPoints);
+      //   WritableArray points = Arguments.createArray();
+      //   if (contourPoints != null) {
+      //     for (int j = 0; j < contourPoints.size(); ++j) {
+      //       points.pushMap(mapFromPoint(contourPoints.get(j), scaleX, scaleY, width, height, paddingLeft, paddingTop));
+      //     }
+      //     contours.putArray(contourNames[i], points);
+
+      //   }
+      // }
+
+      WritableMap testContours = new WritableNativeMap();
+
+      // WritableMap rawContours = new WritableNativeMap();
+      // rawContours.putArray(face.getAllContours());
+      List <FaceContour> rawContours = face.getAllContours();
+
+      for (int i = 0; i < contourTypes.length; i++) {
+        FaceContour contour = face.getContour(contourTypes[i]);
+        if (contour != null){
+          List<PointF> points = contour.getPoints();
+          WritableNativeArray pointsArray = new WritableNativeArray();
+
+          for (int j = 0; j < points.size(); j++) {
+            WritableMap currentPointsMap = new WritableNativeMap();
+
+            currentPointsMap.putDouble("x", points.get(j).x);
+            currentPointsMap.putDouble("y", points.get(j).y);
+
+            pointsArray.pushMap(currentPointsMap);
+          }
+          testContours.putArray(contourNames[i], pointsArray);
+
+        }
+      }
+
+    // return faceContoursTypesMap;
+
+
+      for (int i = 0; i < contourTypes.length; i++) {
+        FaceContour contour = face.getContour(contourTypes[i]);
+        if (contour != null) {
+
+          List<PointF> points = contour.getPoints();
+          WritableArray pointsArray = Arguments.createArray();
+
+            for (int j = 0; j < points.size(); j++) {
+              WritableArray currentPointsMap = Arguments.createArray();
+
+              // currentPointsMap.putDouble("x", points.get(j).x);
+              // currentPointsMap.putDouble("y", points.get(j).y);
+
+              // pointsArray.pushMap(currentPointsMap);
+              pointsArray.pushMap(mapFromPoint(points.get(j), scaleX, scaleY, width, height, paddingLeft, paddingTop));
+            }
+            // contours.putArray(faceContoursTypesStrings[contour.getFaceContourType() - 1], pointsArray);
+            contours.putArray(contourNames[i], pointsArray);
+            // testContours.putArray(contourNames[i], pointsArray);
+        }
+
+      }
+
+      encodedFace.putMap("contours", contours);
+      encodedFace.putMap("old_contour", testContours);
+      encodedFace.putInt("raw_contours", rawContours.size());
+    // }
 
     WritableMap origin = Arguments.createMap();
     Float x = face.getBoundingBox().exactCenterX() - (face.getBoundingBox().width() / 2 );
@@ -87,6 +190,7 @@ public class FaceDetectorUtils {
     WritableMap bounds = Arguments.createMap();
     bounds.putMap("origin", origin);
     bounds.putMap("size", size);
+    
 
     encodedFace.putMap("bounds", bounds);
 
@@ -112,6 +216,23 @@ public class FaceDetectorUtils {
         WritableMap mirroredPosition = positionMirroredHorizontally(landmark, sourceWidth, scaleX);
         face.putMap(landmarkName, mirroredPosition);
       }
+    }
+
+    ReadableMap contours = face.hasKey("contours") ? face.getMap("contours") : null;
+    if (contours != null) {
+      WritableMap newContours = Arguments.createMap();
+      for (String contourName : contourNames) {
+        if (contours.getArray(contourName) != null) {
+          ReadableArray contourPoints = contours.getArray(contourName);
+          WritableArray mirroredContourPoints = Arguments.createArray();
+          for (int j = 0; j < contourPoints.size(); ++j) {
+            mirroredContourPoints.pushMap(positionMirroredHorizontally(contourPoints.getMap(j), sourceWidth, scaleX));
+          }
+          newContours.putArray(contourName, mirroredContourPoints);
+
+        }
+      }
+      face.putMap("contours", newContours);
     }
 
     face.putMap("bounds", newBounds);

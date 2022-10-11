@@ -24,13 +24,16 @@ public class RNFaceDetector {
 
   private int mClassificationType = NO_CLASSIFICATIONS;
   private int mLandmarkType = NO_LANDMARKS;
+  // private int mContourType = NO_CONTOURS;
+  private int mContourType = ALL_CONTOURS;
   private float mMinFaceSize = 0.15f;
   private int mMode = FAST_MODE;
 
   public RNFaceDetector(Context context) {
     mBuilder = new FaceDetectorOptions.Builder()
             .setPerformanceMode(mMode)
-            .setLandmarkMode(mLandmarkType)
+            // .setLandmarkMode(mLandmarkType)
+            .setContourMode(FaceDetectorOptions.CONTOUR_MODE_ALL)
             .setClassificationMode(mClassificationType)
             .setMinFaceSize(mMinFaceSize);
   }
@@ -59,8 +62,16 @@ public class RNFaceDetector {
   public void setLandmarkType(int landmarkType) {
     if (landmarkType != mLandmarkType) {
       release();
-      mBuilder.setLandmarkMode(landmarkType);
-      mLandmarkType = landmarkType;
+      // mBuilder.setLandmarkMode(landmarkType);
+      // mLandmarkType = landmarkType;
+    }
+  }
+
+  public void setContourType(int contourType) {
+    if (contourType != mContourType) {
+      release();
+      // mBuilder.setContourMode(contourType);
+      // mContourType = contourType;
     }
   }
 
