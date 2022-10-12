@@ -18,8 +18,6 @@ public class RNFaceDetector {
   public static int NO_LANDMARKS = FaceDetectorOptions.LANDMARK_MODE_NONE;
   public static int ACCURATE_MODE = FaceDetectorOptions.PERFORMANCE_MODE_ACCURATE;
   public static int FAST_MODE = FaceDetectorOptions.PERFORMANCE_MODE_FAST;
-  public static int ALL_CONTOURS = FaceDetectorOptions.ALL_CONTOURS;
-  public static int NO_CONTOURS = FaceDetectionOptions.NO_CONTOURS;
 
   private FaceDetector mFaceDetector = null;
   private ImageDimensions mPreviousDimensions;

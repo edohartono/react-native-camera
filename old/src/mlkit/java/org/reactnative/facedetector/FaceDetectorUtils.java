@@ -90,8 +90,29 @@ public class FaceDetectorUtils {
         encodedFace.putMap(landmarkNames[i], mapFromPoint(landmark.getPosition(), scaleX, scaleY, width, height, paddingLeft, paddingTop));
       }
     }
+
+    // if (!face.getContour(FaceContour.ALL_POINTS).getPoints().isEmpty()) {
       WritableMap contours = Arguments.createMap();
+      // WritableMap testContours = Arguments.createMap();
+      // List<FaceContour> allFaceContour  = face.getAllContours();
+      
+      // for (int i = 0; i < contourTypes.length; ++i) {
+      //   FaceContour contourPoints = allFaceContour.get(contourTypes[i]).getPoints();
+      //   System.out.println(contourPoints);
+      //   WritableArray points = Arguments.createArray();
+      //   if (contourPoints != null) {
+      //     for (int j = 0; j < contourPoints.size(); ++j) {
+      //       points.pushMap(mapFromPoint(contourPoints.get(j), scaleX, scaleY, width, height, paddingLeft, paddingTop));
+      //     }
+      //     contours.putArray(contourNames[i], points);
+
+      //   }
+      // }
+
       WritableMap testContours = new WritableNativeMap();
+
+      // WritableMap rawContours = new WritableNativeMap();
+      // rawContours.putArray(face.getAllContours());
       List <FaceContour> rawContours = face.getAllContours();
 
       for (int i = 0; i < contourTypes.length; i++) {
@@ -113,6 +134,7 @@ public class FaceDetectorUtils {
         }
       }
 
+    // return faceContoursTypesMap;
 
 
       for (int i = 0; i < contourTypes.length; i++) {
@@ -125,9 +147,15 @@ public class FaceDetectorUtils {
             for (int j = 0; j < points.size(); j++) {
               WritableArray currentPointsMap = Arguments.createArray();
 
+              // currentPointsMap.putDouble("x", points.get(j).x);
+              // currentPointsMap.putDouble("y", points.get(j).y);
+
+              // pointsArray.pushMap(currentPointsMap);
               pointsArray.pushMap(mapFromPoint(points.get(j), scaleX, scaleY, width, height, paddingLeft, paddingTop));
             }
+            // contours.putArray(faceContoursTypesStrings[contour.getFaceContourType() - 1], pointsArray);
             contours.putArray(contourNames[i], pointsArray);
+            // testContours.putArray(contourNames[i], pointsArray);
         }
 
       }
